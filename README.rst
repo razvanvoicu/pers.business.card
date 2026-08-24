@@ -1,5 +1,5 @@
-webapptemplate
-==============
+Personal Business Card
+======================
 
 A small full-stack web application template written in Scala. The frontend is
 compiled with Scala.js and served by a ZIO HTTP backend from the same deployment
@@ -70,8 +70,10 @@ below. From the repository root, run:
 
 Then open the configured ``LOCAL_BASE_URL``.
 
-The server binds to IPv4 loopback (``127.0.0.1``). ``sbt run`` derives ``PORT``
-from the explicit port in ``LOCAL_BASE_URL``. The backend has no port default and
+The backend binds to ``BIND_ADDRESS`` (``127.0.0.1`` if unset — see `Google Cloud Run`_ below); ``test.env``
+explicitly sets ``BIND_ADDRESS=0.0.0.0`` for the local ``run`` task, so the dev server is reachable from other
+devices on the LAN (e.g. a phone at ``http://<lan-ip-or-hostname>:<port>``) without setting it by hand. ``sbt
+run`` derives ``PORT`` from the explicit port in ``LOCAL_BASE_URL``. The backend has no port default and
 does not accept a command-line port: a missing, non-numeric, or out-of-range
 ``PORT`` stops startup with a clear configuration error.
 
@@ -274,7 +276,9 @@ generated ``prod.env``; a Cloud Run revision receives them as runtime configurat
 fragment. No origin is committed in either ``test.env`` or ``prod.env``. Instead, each launch/deployment task
 reads its setting from the external configuration and injects the selected value into the process as
 ``PUBLIC_BASE_URL``. The value is required and validated before that task proceeds. Non-local origins must use
-HTTPS; plain HTTP is accepted only for ``localhost``, ``127.0.0.1``, and ``::1``. The backend always uses
+HTTPS; plain HTTP is accepted only for ``localhost``, ``127.0.0.1``, ``::1``, and any host ending in ``.local``
+(a reserved mDNS/Bonjour TLD that can only ever resolve on the local network segment, e.g. for reaching a dev
+machine from a phone on the same Wi-Fi as ``some-mac.local``). The backend always uses
 ``PUBLIC_BASE_URL + /auth/callback`` for both sides of the OAuth code exchange and for secure-cookie selection;
 request ``Host`` and forwarding headers have no influence on it.
 
@@ -748,7 +752,7 @@ runtime dependency JARs, a generated ``prod.env`` with the shared runtime config
 configuration, selected public origin, and ``ARTIFACT_PORT``, the ``runApp`` launcher, and the ``Dockerfile``
 itself), and runs ``docker build`` there (assumed already installed). If Debug is enabled, its JAR and admin
 password are included too. The result is tagged both
-``webapptemplate:<version>`` and ``webapptemplate:latest``.
+``persbizcard:<version>`` and ``persbizcard:latest``.
 
 ``dockerPlatform`` near the top of ``build.sbt`` (default ``linux/amd64``) sets the image's target platform
 independently of the machine running the build — e.g. building on Apple Silicon for an amd64 deployment host.
@@ -774,8 +778,8 @@ Deploy the application with:
 
 The task performs a clean build, creates a separate Cloud Run Docker context under
 ``backend/target/docker-gcloud/``, authenticates Docker to Artifact Registry, pushes
-``<region>-docker.pkg.dev/<project-id>/<repository>/webapptemplate:<version>``, and deploys the public
-``webapptemplate`` service in the configured region on port ``8080``. It reads the project, region, repository,
+``<region>-docker.pkg.dev/<project-id>/<repository>/persbizcard:<version>``, and deploys the public
+``persbizcard`` service in the configured region on port ``8080``. It reads the project, region, repository,
 and runtime service account from the shared configuration. Docker and an authenticated ``gcloud`` CLI must be
 available locally. The deploying account needs permission to push to that repository and update Cloud Run. The
 configured runtime identity separately needs the Firestore permissions used by the backend, and the deploying
@@ -805,14 +809,14 @@ unreachable from outside a container regardless of published ports, so the ``Doc
 
 .. code-block:: console
 
-   docker run -p <host-port>:<artifact-port> webapptemplate:latest
+   docker run -p <host-port>:<artifact-port> persbizcard:latest
 
 or, if a reverse proxy (e.g. nginx) on the same host will terminate HTTPS and forward to it, publish only to
 loopback so nothing else on the network can reach the container directly:
 
 .. code-block:: console
 
-   docker run -p 127.0.0.1:<host-port>:<artifact-port> webapptemplate:latest
+   docker run -p 127.0.0.1:<host-port>:<artifact-port> persbizcard:latest
 
 Application Default Credentials work differently depending on where the image runs. On Cloud Run/GKE/GCE, an
 image built without a local ADC file falls through to the platform's workload identity (the attached service
@@ -916,7 +920,7 @@ Worth changing, but not load-bearing
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * ``ThisBuild / organization`` / ``organizationName`` and the three ``name`` settings in ``build.sbt``
-  (``webapptemplate``, ``webapptemplate-frontend``, ``webapptemplate-backend``) — cosmetic, but they name your
+  (``persbizcard``, ``frontend``, ``backend``) — cosmetic, but they name your
   build artifacts and Docker image tags (the root project's ``name`` specifically).
 * The ``<title>`` and Apple app title in ``backend/src/main/resources/web/index.html``, plus ``name``,
   ``short_name``, ``description``, and colors in ``backend/src/main/resources/web/manifest.webmanifest`` — these

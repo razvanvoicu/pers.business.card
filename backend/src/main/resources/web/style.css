@@ -4,24 +4,30 @@
   --bg: #f6f6f7;
   --panel-bg: #ffffff;
   --border: #d0d0d4;
-  --backdrop: rgb(0 0 0 / 45%);
   --shadow: rgb(0 0 0 / 20%);
+  --muted-fg: #6b6b70;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --fg: #e6e6e8;
-    --bg: #161618;
-    --panel-bg: #202024;
+    --fg: darkgoldenrod;
+    --bg: #103050;
+    --panel-bg: #204060;
+    --button-bg: #406080;
     --border: #3a3a40;
-    --backdrop: rgb(0 0 0 / 65%);
     --shadow: rgb(0 0 0 / 45%);
+    --muted-fg: tan;
   }
 }
 
 html,
 body {
-  height: 100%;
+  /* `dvh` tracks the *currently visible* viewport (falls back to `vh` on browsers that don't support it, since
+     an unsupported value in a declaration is ignored, leaving the first one in effect). Plain `vh` is defined as
+     the *largest* possible viewport on mobile Safari/Chrome-on-iOS — it doesn't shrink when the address bar or
+     bottom toolbar are showing, so content sized with it ends up partly hidden behind them instead of resizing. */
+  height: 100vh;
+  height: 100dvh;
   margin: 0;
 }
 
@@ -29,216 +35,218 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   background: var(--bg);
   color: var(--fg);
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
-.app {
-  width: 90vw;
-}
-
-.app h1 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin: 0 0 0.75rem;
-}
-
-.home {
-  text-align: center;
-}
-
-.welcome {
-  font-size: 1.6rem;
-  font-weight: 600;
-  margin: 0;
-}
-
-.login-button {
-  display: inline-block;
-  padding: 0.65rem 1.4rem;
+/* Always-present simulated mobile viewport, capped at the assumed device's maximum resolution. It fills the
+   real viewport edge-to-edge when that viewport is within the cap in both dimensions, and otherwise sits
+   centered with a visible boundary so it reads as a simulated phone rather than a broken layout. */
+.viewport-frame {
+  box-sizing: border-box;
+  width: min(100vw, 480px);
+  height: min(100vh, 960px);
+  height: min(100dvh, 960px);
+  overflow: hidden;
   background: var(--panel-bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--fg);
-  font-weight: 600;
-  text-decoration: none;
 }
 
-.login-button:hover {
-  border-color: var(--fg);
+@media (min-width: 481px), (min-height: 961px) {
+  .viewport-frame {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 1rem 3rem var(--shadow);
+  }
 }
 
-.user-actions {
-  position: fixed;
-  top: 1rem;
-  right: 1.25rem;
+.card-message {
   display: flex;
+  height: 100%;
   align-items: center;
-  gap: 1rem;
-}
-
-.about-link,
-.logout-link {
-  color: var(--fg);
-  font-size: 0.9rem;
-  font-weight: 600;
-  text-underline-offset: 0.2rem;
-}
-
-.logout-link {
-  padding: 0;
-  background: transparent;
-  border: 0;
-  font-family: inherit;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.logout-link:disabled {
-  cursor: wait;
-  opacity: 0.65;
-}
-
-.about-link:hover,
-.logout-link:hover:not(:disabled) {
-  text-decoration-thickness: 2px;
-}
-
-.logout-error {
+  justify-content: center;
+  padding: 1.5rem;
   text-align: center;
+  color: var(--muted-fg);
 }
 
-.about-overlay {
-  position: fixed;
-  z-index: 1000;
-  inset: 0;
+.card-grid {
+  box-sizing: border-box;
+  display: grid;
+  width: 100%;
+  height: 100%;
+}
+
+.card-photo {
+  display: block;
+  grid-column: 3 / 6;
+  grid-row: 3;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.card-name,
+.card-designation,
+.card-tagline {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
-  background: var(--backdrop);
+  grid-column: 2 / 7;
+  overflow: hidden;
+  white-space: nowrap;
+  text-align: center;
+  text-overflow: ellipsis;
 }
 
-.about-dialog {
-  width: min(28rem, 100%);
-  padding: 1.25rem;
-  box-sizing: border-box;
-  background: var(--panel-bg);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  box-shadow: 0 0.75rem 2rem var(--shadow);
+.card-name {
+  grid-row: 5;
+  font-weight: 700;
+  margin-bottom: -2vh;
 }
 
-.about-header {
+.card-designation {
+  grid-row: 7;
+  font-weight: 500;
+  color: var(--muted-fg);
+}
+
+.card-tagline {
+  grid-row: 9;
+  color: var(--muted-fg);
+  font-style: italic;
+}
+
+.card-link {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.about-header h2 {
-  margin: 0;
-  font-size: 1.25rem;
-}
-
-.about-close {
-  padding: 0 0.3rem;
-  background: transparent;
-  border: 0;
+  overflow: hidden;
   color: var(--fg);
-  font: inherit;
-  font-size: 1.5rem;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.about-details {
-  display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
-  gap: 0.65rem 1rem;
-  margin: 0;
-  font-size: 0.9rem;
-}
-
-.about-details dt {
   font-weight: 600;
-}
-
-.about-details dd {
-  min-width: 0;
-  margin: 0;
-  overflow-wrap: anywhere;
-}
-
-.about-status {
-  margin: 0;
-}
-
-.session-expired-message {
-  margin: 0;
-}
-
-.error {
-  color: #c0392b;
-}
-
-.sheet-row {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 1.5rem;
-  font-size: 0.9rem;
-  overflow-x: auto;
-}
-
-.sheet-row span {
+  text-decoration: underline;
+  text-overflow: ellipsis;
+  text-underline-offset: 0.15em;
   white-space: nowrap;
 }
 
-.sheet-row input {
-  min-width: 4rem;
-  padding: 0.4rem 0.6rem;
-  background: var(--panel-bg);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--fg);
-  font: inherit;
+.card-link-resume {
+  grid-column: 3;
+  grid-row: 11;
+  text-align: right;
+  justify-content: right;
 }
 
-.sheet-row button {
-  white-space: nowrap;
-  padding: 0.45rem 0.9rem;
-  background: var(--panel-bg);
+.card-link-linkedin {
+  grid-column: 5;
+  grid-row: 11;
+  text-align: left;
+  justify-content: left;
+}
+
+.card-link-13-left {
+  grid-column: 3;
+  grid-row: 13;
+  text-align: right;
+  justify-content: right;
+}
+
+.card-link-13-right {
+  grid-column: 5;
+  grid-row: 13;
+  text-align: left;
+  justify-content: left;
+}
+
+.card-contact-button {
+  background: var(--button-bg);
+  grid-column: 3 / 6;
+  grid-row: 15;
+  box-sizing: border-box;
+  max-width: 100%;
+  align-self: center;
+  justify-self: center;
+  padding: 0 1.2em;
+  overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--fg);
+  border-radius: 999px;
+  color: var(--muted-fg);
   font: inherit;
   font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   cursor: pointer;
 }
 
-.sheet-row button:hover {
+.card-contact-button:hover {
   border-color: var(--fg);
 }
 
-.sheet-table {
+.card-qr-trigger {
+  display: block;
+  grid-column: 4;
+  grid-row: 17;
+  box-sizing: border-box;
   width: 100%;
-  margin-top: 1rem;
-  border-collapse: collapse;
+  height: 100%;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
 }
 
-.sheet-table th,
-.sheet-table td {
-  padding: 0.4rem 0.6rem;
-  border: 1px solid var(--border);
-  text-align: left;
-  font-size: 0.85rem;
+.card-qr {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
-.sheet-table th {
+/* Spans almost the whole card (columns 2-6, rows 2-18) purely as an anchor: flexbox pins its one child (the
+   enlarged QR) to the bottom, so the empty space above it stays transparent and click-through rather than
+   covering the rest of the card. */
+.card-qr-overlay {
+  grid-column: 2 / 7;
+  grid-row: 2 / 19;
+  z-index: 5;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.card-qr-overlay-button {
+  box-sizing: border-box;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  overflow: hidden;
   background: var(--panel-bg);
-  font-weight: 600;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 0.5rem 1.5rem var(--shadow);
+  cursor: pointer;
+  /* Collapsed by default, scaling up from roughly where the small QR trigger sits (bottom of the card) rather
+     than from the overlay's own center, so growing/shrinking reads as continuous with the small QR. */
+  transform: scale(0.05);
+  transform-origin: bottom center;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 0.32s ease,
+    opacity 0.32s ease;
+}
+
+.card-qr-overlay.is-open .card-qr-overlay-button {
+  transform: scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.card-qr-overlay-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }

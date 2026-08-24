@@ -1,7 +1,7 @@
 {
-  "name": "Web App Template",
-  "short_name": "Web App",
-  "description": "A Scala web application template.",
+  "name": "Personal Business Card",
+  "short_name": "Bizcard",
+  "description": "A mobile-friendly web app serving as a business card.",
   "id": "/",
   "start_url": "/",
   "scope": "/",

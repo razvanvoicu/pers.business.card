@@ -109,7 +109,7 @@ lazy val shared = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .in(file("shared"))
   .settings(
-    name := "webapptemplate-shared",
+    name := "shared",
     libraryDependencies += "dev.zio" %%% "zio-json" % zioJsonVersion
   )
 
@@ -120,7 +120,7 @@ lazy val frontend = (project in file("frontend"))
   .enablePlugins(ScalaJSPlugin)
   .dependsOn(sharedJS)
   .settings(
-    name := "webapptemplate-frontend",
+    name := "frontend",
     coverageEnabled := false,
     scalaJSUseMainModuleInitializer := true,
     scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.NoModule)),
@@ -302,7 +302,7 @@ def waitForPortOpen(host: String, port: Int, timeoutMillis: Long): Boolean = {
 lazy val backend = (project in file("backend"))
   .dependsOn(sharedJVM)
   .settings(
-    name := "webapptemplate-backend",
+    name := "backend",
     libraryDependencies ++= Seq(
       classGraph,
       zioHttp,
@@ -345,7 +345,7 @@ lazy val backend = (project in file("backend"))
 lazy val debugPlugin = (project in file("debug-plugin"))
   .dependsOn(backend % "provided->compile")
   .settings(
-    name := "webapptemplate-debug-plugin",
+    name := "debug-plugin",
     libraryDependencies += munit % Test
   )
 
@@ -358,7 +358,7 @@ lazy val debugPlugin = (project in file("debug-plugin"))
 // clobbering the other's data.
 lazy val e2etest = (project in file("e2etest"))
   .settings(
-    name := "webapptemplate-e2etest",
+    name := "e2etest",
     coverageEnabled := false,
     libraryDependencies ++= Seq(selenium % Test, munit % Test),
     Test / fork := true,
@@ -581,7 +581,7 @@ lazy val root = {
   Project(id = "root", base = file("."))
     .aggregate(sharedJS, sharedJVM, frontend, backend)
     .settings(
-      name := "webapptemplate",
+      name := "persbizcard",
       coverageEnabled := false,
       publish / skip := true,
       run / aggregate := false,

@@ -22,10 +22,8 @@ class HomePageE2ESuite extends munit.FunSuite:
   override def afterAll(): Unit =
     if driver != null then driver.quit()
 
-  test("the signed-out home page offers a Google login link"):
+  test("the home page renders the business card"):
     driver.get(baseUrl)
-    val loginLink = driver.findElement(By.cssSelector(".login-button"))
+    val name = driver.findElement(By.cssSelector(".card-name"))
 
-    assertEquals(loginLink.getText, "Login with Google")
-    val href = loginLink.getDomAttribute("href")
-    assert(href.endsWith("/auth/login"), href)
+    assertEquals(name.getText, "Your Name")

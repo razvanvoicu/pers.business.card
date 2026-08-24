@@ -75,11 +75,17 @@ object Main extends ZIOAppDefault:
     Method.GET / "favicon.ico" -> handler(asset("favicon.ico", image.`vnd.microsoft.icon`, staticCacheCtrl)),
     Method.GET / "icon-192.png" -> handler(asset("icon-192.png", image.png, staticCacheCtrl)),
     Method.GET / "icon-512.png" -> handler(asset("icon-512.png", image.png, staticCacheCtrl)),
+    Method.GET / "mug.jpg" -> handler(asset("mug.jpg", image.jpeg, staticCacheCtrl)),
+    Method.GET / "qr-code.png" -> handler(asset("qr-code.png", image.png, staticCacheCtrl)),
+    Method.GET / "resume.pdf" ->
+      handler(asset("Razvan Voicu Resume 2026.pdf", application.pdf, staticCacheCtrl)),
     Method.GET / "manifest.webmanifest" ->
       handler(asset("manifest.webmanifest", application.`manifest+json`, staticCacheCtrl)),
     Method.GET / "style.css" -> handler(asset("style.css", text.css, staticCacheCtrl)),
     Method.GET / "main.js" -> handler(asset("main.js", text.javascript, staticCacheCtrl)),
-    Method.GET / "main.js.map" -> handler(asset("main.js.map", application.json, staticCacheCtrl))
+    Method.GET / "main.js.map" -> handler(asset("main.js.map", application.json, staticCacheCtrl)),
+    // no-cache (like index.html): a stale cached copy would delay the browser noticing a future sw.js update.
+    Method.GET / "sw.js" -> handler(asset("sw.js", text.javascript, CacheControl.NoCache))
   )
 
   private def port: IO[IllegalArgumentException, Int] =

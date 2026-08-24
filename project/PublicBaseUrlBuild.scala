@@ -3,6 +3,10 @@ import java.net.URI
 object PublicBaseUrlBuild {
   private val localHosts = Set("localhost", "127.0.0.1", "::1")
 
+  // .local is a reserved mDNS/Bonjour TLD (RFC 6762): it can only ever resolve on the local network segment, so
+  // a plain-HTTP host ending in it (e.g. a phone reaching a dev machine as "some-mac.local") is exactly as safe
+  // to allow as the fixed localHosts above, without needing to know the specific hostname in advance.
+
   def configEnv(configuredVariable: String, configuredValue: String): Map[String, String] =
     Map("PUBLIC_BASE_URL" -> validate(configuredVariable.stripSuffix("="), configuredValue.trim))
 
@@ -39,8 +43,8 @@ object PublicBaseUrlBuild {
         case _ if Option(uri.getRawQuery).nonEmpty                    => invalid("must not contain a query")
         case _ if Option(uri.getRawFragment).nonEmpty                 => invalid("must not contain a fragment")
         case _ if port == 0 || port > 65535                           => invalid("contains an invalid port")
-        case (Some("http"), Some(name)) if !localHosts.contains(name) =>
-          invalid("must use https unless its host is localhost, 127.0.0.1, or ::1")
+        case (Some("http"), Some(name)) if !localHosts.contains(name) && !name.endsWith(".local") =>
+          invalid("must use https unless its host is localhost, 127.0.0.1, ::1, or ends in .local")
         case (Some(protocol), Some(name)) =>
           val normalizedHost = if (name.contains(':')) s"[$name]" else name
           val portSuffix = if (port >= 0) s":$port" else ""

@@ -12,6 +12,7 @@ class AuthSuite extends munit.FunSuite:
     assertEquals(AppConfig.validatePublicBaseUrl("http://127.0.0.1:8123"), Right("http://127.0.0.1:8123"))
     assertEquals(AppConfig.validatePublicBaseUrl("http://[::1]:8123"), Right("http://[::1]:8123"))
     assertEquals(AppConfig.validatePublicBaseUrl("https://APP.EXAMPLE.COM:8443"), Right("https://app.example.com:8443"))
+    assertEquals(AppConfig.validatePublicBaseUrl("http://ZEUS.local:8123"), Right("http://zeus.local:8123"))
 
   test("rejects unsafe or ambiguous public base URLs"):
     Seq(

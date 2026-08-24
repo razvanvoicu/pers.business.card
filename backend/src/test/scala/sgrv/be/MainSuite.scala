@@ -198,7 +198,7 @@ class MainSuite extends munit.FunSuite:
       Some(Header.ContentType(MediaType.application.`manifest+json`))
     )
     assertEquals(response.headers.get(Header.CacheControl), Some(testStaticCacheControl))
-    assertEquals(json.get("name").getAsString, "Web App Template")
+    assertEquals(json.get("name").getAsString, "Personal Business Card")
     assertEquals(json.get("start_url").getAsString, "/")
     assertEquals(json.get("scope").getAsString, "/")
     assertEquals(json.get("display").getAsString, "standalone")
