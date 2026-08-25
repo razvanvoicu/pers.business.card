@@ -6,7 +6,7 @@ import zio.{Task, ZIO}
 
 import scala.language.postfixOps
 
-private[auth] object GoogleFuture:
+private[be] object GoogleFuture:
   def fromApiFuture[A](make: => ApiFuture[A]): Task[A] =
     ZIO
       .attempt(make)

@@ -1,11 +1,13 @@
 :root {
   color-scheme: light dark;
-  --fg: #1c1c1e;
-  --bg: #f6f6f7;
-  --panel-bg: #ffffff;
-  --border: #d0d0d4;
-  --shadow: rgb(0 0 0 / 20%);
-  --muted-fg: #6b6b70;
+    --fg: darkgoldenrod;
+    --bg: #103050;
+    --panel-bg: #204060;
+    --button-bg: #406080;
+    --border: #3a3a40;
+    --shadow: rgb(0 0 0 / 45%);
+    --muted-fg: tan;
+    --editor-fg: #E2BC83;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -16,7 +18,40 @@
     --button-bg: #406080;
     --border: #3a3a40;
     --shadow: rgb(0 0 0 / 45%);
-    --muted-fg: tan;
+    --muted-fg: #9e9280;
+    --editor-fg: #E2BC83;
+  }
+}
+
+/* Below the device cap, .viewport-frame shrinks with the real viewport (min(100vw, 480px)), so fixed-px sizing
+   inside it stops scaling and can overflow or look disproportionate on narrower screens. Above the cap the
+   frame is pinned at exactly 480px regardless of how much wider the real viewport is, so fixed sizes are both
+   safe and preferable there (vw-relative sizing would otherwise keep growing past the cap forever). These two
+   blocks carry the same design at two different units for exactly that reason: everything under .card-message-*
+   reads one or the other depending on which regime is currently active, so there's a single place to retune
+   either one. The vw values are chosen to roughly match their fixed counterparts at the 480px boundary itself.
+*/
+:root {
+  --message-font-size: 5vw;
+  --message-panel-padding: 3.3vw;
+  --message-panel-radius: 2.5vw;
+  --message-gap: 2vw;
+  --message-editor-padding: 1.7vw;
+  --message-editor-radius: 1.7vw;
+  --message-button-width: 23vw;
+  --message-button-padding-block: 1.7vw;
+}
+
+@media (min-width: 481px) {
+  :root {
+    --message-font-size: 18pt;
+    --message-panel-padding: 1rem;
+    --message-panel-radius: 12px;
+    --message-gap: 0.6rem;
+    --message-editor-padding: 0.5rem;
+    --message-editor-radius: 8px;
+    --message-button-width: 7rem;
+    --message-button-padding-block: 0.5rem;
   }
 }
 
@@ -177,10 +212,38 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
   cursor: pointer;
+  /* Immediate tactile feedback while held; the .is-clicked keyframe pulse below picks up right where this
+     leaves off, once released, to confirm the click even on a fast tap. */
+  transition: transform 0.1s ease;
 }
 
 .card-contact-button:hover {
   border-color: var(--fg);
+}
+
+.card-contact-button:active {
+  transform: scale(0.92);
+}
+
+@keyframes card-contact-button-pulse {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(0.9);
+    border-color: var(--fg);
+  }
+  70% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+    border-color: var(--border);
+  }
+}
+
+.card-contact-button.is-clicked {
+  animation: card-contact-button-pulse 0.4s ease;
 }
 
 .card-qr-trigger {
@@ -249,4 +312,197 @@ body {
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+
+/* Spans the entire grid (columns 2-6, the full row range) purely as a centering anchor for the actual panel,
+   which is 60% of that height — same click-through-outside-the-panel approach as .card-qr-overlay above. */
+.card-message-overlay {
+  grid-column: 2 / 7;
+  grid-row: 1 / 20;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.card-message-panel {
+  box-sizing: border-box;
+  width: 100%;
+  height: 60%;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: var(--message-gap);
+  padding: var(--message-panel-padding);
+  background: var(--button-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--message-panel-radius);
+  box-shadow: 0 0.5rem 1.5rem var(--shadow);
+  /* Set once here rather than on each of title/editor/button below: all three inherit it (the editor and
+     buttons already declare font: inherit; a plain div like the title inherits font-size by default anyway). */
+  font-size: var(--message-font-size);
+  transform: scale(0.05);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 0.32s ease,
+    opacity 0.32s ease;
+}
+
+.card-message-overlay.is-open .card-message-panel {
+  transform: scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.card-message-title {
+  color: var(--muted-fg);
+  font-weight: 900;
+}
+
+.card-message-editor {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: var(--message-editor-padding);
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--message-editor-radius);
+  color: var(--editor-fg);
+  font: inherit;
+  resize: none;
+}
+
+.card-message-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--message-gap);
+}
+
+/* Equal-sized regardless of label length ("Submit" vs "Cancel") since both share this fixed width instead of
+   sizing to their own content. Flex items default to min-width: auto, which lets a child's own content force it
+   wider than a declared width/flex-basis if the text doesn't fit — overriding that to 0 is what actually makes
+   the shared width stick; white-space/overflow below give it somewhere graceful to go if a future label is too
+   long for the button rather than silently re-triggering the same growth. border-radius stays a plain 999px (not
+   a variable): it's already a scale-invariant "always fully pill-shaped" value, unlike the sizes above which need
+   to track the panel's own scale. */
+.card-message-button {
+  box-sizing: border-box;
+  flex: 0 0 var(--message-button-width);
+  min-width: 0;
+  overflow: hidden;
+  padding: var(--message-button-padding-block) 0;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--fg);
+  font: inherit;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.card-message-button:hover:not(:disabled) {
+  border-color: var(--fg);
+}
+
+.card-message-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Spans the entire grid purely as a centering anchor, same approach as .card-message-overlay above. The spinner
+   itself keeps spinning continuously even while hidden (harmless: opacity 0 makes it invisible) so that showing
+   it never has to wait for an animation to "catch up" from a standstill. */
+.card-waiting-overlay {
+  grid-column: 2 / 7;
+  grid-row: 1 / 20;
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.card-spinner {
+  box-sizing: border-box;
+  width: 12vw;
+  height: 12vw;
+  max-width: 3rem;
+  max-height: 3rem;
+  border: 0.35em solid var(--border);
+  border-top-color: var(--fg);
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  animation: card-spinner-spin 0.8s linear infinite;
+}
+
+.card-waiting-overlay.is-open .card-spinner {
+  opacity: 1;
+}
+
+@keyframes card-spinner-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Same centering-anchor-plus-scaled-panel structure as .card-message-overlay/.card-message-panel; reuses the
+   same sizing variables so it stays visually consistent with the message editor it follows in the flow. */
+.card-result-overlay {
+  grid-column: 2 / 7;
+  grid-row: 1 / 20;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.card-result-panel {
+  box-sizing: border-box;
+  width: 100%;
+  height: 60%;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: var(--message-gap);
+  padding: var(--message-panel-padding);
+  background: var(--button-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--message-panel-radius);
+  box-shadow: 0 0.5rem 1.5rem var(--shadow);
+  font-size: var(--message-font-size);
+  transform: scale(0.05);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 0.32s ease,
+    opacity 0.32s ease;
+}
+
+.card-result-overlay.is-open .card-result-panel {
+  transform: scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.card-result-content {
+  overflow-y: auto;
+  color: var(--editor-fg);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Diagnostic text tends to be longer and more technical than the plain success message, so it reads better
+   smaller and monospaced. */
+.card-result-content.is-error {
+  font-size: 0.6em;
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+}
+
+.card-result-ok {
+  justify-self: end;
+  width: 10vw;
 }

@@ -13,7 +13,7 @@ private[fe] object CardText:
   val ResumeHref = "/resume.pdf"
 
   val LinkedInLabel = "LinkedIn"
-  val LinkedInUrl = "hhttps://www.linkedin.com/in/razvan-voicu-89061711/"
+  val LinkedInUrl = "https://www.linkedin.com/in/razvan-voicu-89061711/"
 
   val Link13LeftLabel = "Blog"
   val Link13LeftUrl = "https://blog.raz.sg"
@@ -21,5 +21,14 @@ private[fe] object CardText:
   val Link13RightUrl = "https://portfolio.raz.sg"
 
   val ContactButtonLabel = "Contact me"
+
+  val MessageTitle = "Drop me a line"
+  val MessagePlaceholder = "Type your message here…"
+  val MessageSubmitLabel = "Submit"
+  val MessageCancelLabel = "Cancel"
+
+  val MessageWaitingLabel = "Sending your message…"
+  val MessageSuccessText = "Message successfully sent"
+  val MessageOkLabel = "OK"
 
   val TooExtremeMessage = "Please make this window taller to view this card."

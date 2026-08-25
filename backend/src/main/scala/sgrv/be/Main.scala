@@ -1,6 +1,7 @@
 package sgrv.be
 
 import sgrv.be.auth.{AppConfig, DatabaseAdmin, GoogleOAuth, SessionStore, TokenGenerator}
+import sgrv.be.contact.MessageStore
 import sgrv.be.core.{CapabilityRegistry, RouteDiscovery}
 import zio.*
 import zio.http.*
@@ -126,6 +127,7 @@ object Main extends ZIOAppDefault:
       SessionStore.live,
       TokenGenerator.live,
       DatabaseAdmin.live,
+      MessageStore.live,
       Client.default
     )
 

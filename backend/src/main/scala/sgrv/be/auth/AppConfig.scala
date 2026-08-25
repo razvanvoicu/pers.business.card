@@ -6,7 +6,7 @@ import zio.{System, Task, ZIO, ZLayer}
 private[be] final case class OAuthConfig(clientId: String, clientSecret: String, publicBaseUrl: String):
   val callbackUri: String = s"$publicBaseUrl/auth/callback"
   val callbackIsSecure: Boolean = publicBaseUrl.startsWith("https://")
-private[auth] final case class FirestoreConfig(projectId: String, databaseId: String, location: String)
+private[be] final case class FirestoreConfig(projectId: String, databaseId: String, location: String)
 private[be] final case class AppConfig(
     oauth: OAuthConfig,
     firestore: FirestoreConfig,

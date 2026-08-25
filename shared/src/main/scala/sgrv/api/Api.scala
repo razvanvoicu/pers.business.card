@@ -37,3 +37,9 @@ final case class SpreadsheetContentResponse(rows: Seq[Seq[String]])
 
 object SpreadsheetContentResponse:
   given JsonCodec[SpreadsheetContentResponse] = DeriveJsonCodec.gen[SpreadsheetContentResponse]
+
+@jsonNoExtraFields
+final case class SubmitMessageRequest(message: String)
+
+object SubmitMessageRequest:
+  given JsonCodec[SubmitMessageRequest] = DeriveJsonCodec.gen[SubmitMessageRequest]

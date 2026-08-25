@@ -4,9 +4,15 @@ import com.raquo.laminar.api.L.*
 import com.raquo.laminar.codecs.StringAsIsCodec
 import com.raquo.laminar.nodes.ReactiveHtmlElement
 import org.scalajs.dom
+import sgrv.api.SubmitMessageRequest
+import zio.json.*
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.scalajs.js
+import scala.scalajs.js.Thenable.Implicits.*
+import scala.util.control.NonFatal
+import scala.util.{Failure, Success}
 
 /** The personal business card: a 7-column x 19-row CSS grid whose track sizes are recomputed by `GridMath`
   * every time the simulated mobile viewport (`.viewport-frame`) resizes, so the layout stays proportional and
@@ -20,9 +26,22 @@ private[fe] object BusinessCard:
     */
   private final case class ResizeSubscriptions(observer: dom.ResizeObserver, removeVisualViewportListener: () => Unit)
 
+  /** The contact-message flow's progression: opening the editor, submitting it, and reporting the outcome are
+    * mutually exclusive, so a single state (rather than several independent booleans) rules out invalid
+    * combinations like a waiting spinner shown at the same time as the editor.
+    */
+  private enum ContactFlowState:
+    case Closed
+    case Editing
+    case Submitting
+    case Succeeded
+    case Failed(details: String)
+
   def render(): Div =
     val frameSize: Var[(Double, Double)] = Var((0.0, 0.0))
     val qrExpanded: Var[Boolean] = Var(false)
+    val contactFlow: Var[ContactFlowState] = Var(ContactFlowState.Closed)
+    val messageText: Var[String] = Var(loadMessageDraft())
 
     val layoutSignal: Signal[GridMath.LayoutResult] =
       frameSize.signal.map((width, height) => GridMath.compute(width, height))
@@ -32,7 +51,7 @@ private[fe] object BusinessCard:
         case GridMath.LayoutResult.Fits(metrics)   => metrics
         case GridMath.LayoutResult.TooExtreme(_, _) => PlaceholderMetrics
 
-    val cardGrid = grid(metricsSignal, qrExpanded)
+    val cardGrid = grid(metricsSignal, qrExpanded, contactFlow, messageText)
     val tooExtremeMessage = div(cls := "card-message", p(CardText.TooExtremeMessage))
 
     div(
@@ -154,6 +173,62 @@ private[fe] object BusinessCard:
       }(using ctx.owner): Unit
       whenFontsReady(() => applyFittedFontSize(element, lastMetrics.rowHeights(rowIndex) * fraction))
 
+  /** Adds `className` on click and removes it again after `durationMillis`, so a CSS animation keyed off that
+    * class plays once per click. Toggled directly via `classList` (rather than through reactive state) so a
+    * rapid re-click restarts the animation: forcing a reflow between removing and re-adding the class is what
+    * makes the browser notice, since re-setting an already-present class wouldn't otherwise retrigger anything.
+    */
+  private def pulseOnClick[El <: ReactiveHtmlElement[? <: dom.HTMLElement]](className: String, durationMillis: Int): Modifier[El] =
+    inContext[El]: thisElement =>
+      onClick --> { _ =>
+        val element = thisElement.ref
+        element.classList.remove(className)
+        val _ = element.offsetWidth
+        element.classList.add(className)
+        val _ = dom.window.setTimeout(() => element.classList.remove(className), durationMillis.toDouble)
+      }
+
+  private val MessageDraftStorageKey = "sgrv.contact-message-draft.v1"
+
+  /** The drafted message survives closing the panel (Cancel) and page reloads alike, and is only cleared once a
+    * submission actually succeeds. Storage access is wrapped defensively (matching the rest of the app's
+    * localStorage usage): private browsing or a full storage quota can make it throw, and losing a draft is a
+    * much smaller problem than crashing the page over it.
+    */
+  private def loadMessageDraft(): String =
+    try Option(dom.window.localStorage.getItem(MessageDraftStorageKey)).getOrElse("")
+    catch case NonFatal(_) => ""
+
+  private def saveMessageDraft(value: String): Unit =
+    try dom.window.localStorage.setItem(MessageDraftStorageKey, value)
+    catch case NonFatal(_) => ()
+
+  private final case class SubmitMessageFailure(status: Int, responseBody: String)
+      extends RuntimeException(s"HTTP $status: $responseBody")
+
+  private def submitMessage(text: String): Future[Unit] =
+    val init = new dom.RequestInit:
+      method = dom.HttpMethod.POST
+      headers = js.Dictionary("Content-Type" -> "application/json")
+      body = SubmitMessageRequest(text).toJson
+    dom.fetch("/submit-message", init).flatMap { response =>
+      if response.ok then Future.successful(())
+      else
+        val responseBody: Future[String] = response.text()
+        responseBody.flatMap(body => Future.failed(SubmitMessageFailure(response.status, body)))
+    }
+
+  /** The text shown in the error reading pane: the server already returns a client-safe diagnostic message as the
+    * response body (see `SubmitMessage.responseFor` on the backend), so it's surfaced as-is; a network-level
+    * failure (no response at all) falls back to the exception's own message.
+    */
+  private def submitErrorDetails(error: Throwable): String =
+    error match
+      case SubmitMessageFailure(status, body) if body.trim.nonEmpty => s"HTTP $status\n\n$body"
+      case SubmitMessageFailure(status, _)                          => s"HTTP $status"
+      case other =>
+        Option(other.getMessage).map(_.trim).filter(_.nonEmpty).getOrElse(other.getClass.getSimpleName)
+
   private def externalLink(cssClass: String, label: String, url: String): Anchor =
     a(
       cls := s"card-link $cssClass",
@@ -163,7 +238,12 @@ private[fe] object BusinessCard:
       label
     )
 
-  private def grid(metricsSignal: Signal[GridMath.GridMetrics], qrExpanded: Var[Boolean]): Div =
+  private def grid(
+      metricsSignal: Signal[GridMath.GridMetrics],
+      qrExpanded: Var[Boolean],
+      contactFlow: Var[ContactFlowState],
+      messageText: Var[String]
+  ): Div =
     div(
       cls := "card-grid",
       styleAttr <-- metricsSignal.map(gridTemplateStyle),
@@ -207,7 +287,9 @@ private[fe] object BusinessCard:
         typ := "button",
         cls := "card-contact-button",
         fitFontSize(metricsSignal, rowIndex = 14, GridSpec.ButtonFontFraction),
-        // The button's action is defined by a later spec; it's intentionally inert for now.
+        // The animation gives a press-and-bounce acknowledgement independently of the click's actual effect.
+        pulseOnClick("is-clicked", durationMillis = 400),
+        onClick --> (_ => contactFlow.set(ContactFlowState.Editing)),
         CardText.ContactButtonLabel
       ),
       button(
@@ -234,6 +316,97 @@ private[fe] object BusinessCard:
             cls := "card-qr-overlay-image",
             src := "/qr-code.png",
             alt := "QR code linking to this page"
+          )
+        )
+      ),
+      div(
+        cls := "card-message-overlay",
+        cls("is-open") <-- contactFlow.signal.map(_ == ContactFlowState.Editing),
+        div(
+          cls := "card-message-panel",
+          role := "dialog",
+          aria.label := CardText.MessageTitle,
+          div(cls := "card-message-title", CardText.MessageTitle),
+          textArea(
+            cls := "card-message-editor",
+            placeholder := CardText.MessagePlaceholder,
+            tabIndex <-- contactFlow.signal.map(state => if state == ContactFlowState.Editing then 0 else -1),
+            value <-- messageText.signal,
+            onInput.mapToValue --> { text =>
+              messageText.set(text)
+              saveMessageDraft(text)
+            }
+          ),
+          div(
+            cls := "card-message-buttons",
+            button(
+              typ := "button",
+              cls := "card-message-button card-message-cancel",
+              tabIndex <-- contactFlow.signal.map(state => if state == ContactFlowState.Editing then 0 else -1),
+              onClick --> (_ => contactFlow.set(ContactFlowState.Closed)),
+              CardText.MessageCancelLabel
+            ),
+            button(
+              typ := "button",
+              cls := "card-message-button card-message-submit",
+              disabled <-- messageText.signal.map(_.trim.isEmpty),
+              tabIndex <-- contactFlow.signal.map(state => if state == ContactFlowState.Editing then 0 else -1),
+              onClick --> { _ =>
+                val text = messageText.now().trim
+                contactFlow.set(ContactFlowState.Submitting)
+                submitMessage(text).onComplete {
+                  case Success(_) =>
+                    messageText.set("")
+                    saveMessageDraft("")
+                    contactFlow.set(ContactFlowState.Succeeded)
+                  case Failure(error) =>
+                    contactFlow.set(ContactFlowState.Failed(submitErrorDetails(error)))
+                }
+              },
+              CardText.MessageSubmitLabel
+            )
+          )
+        )
+      ),
+      div(
+        cls := "card-waiting-overlay",
+        cls("is-open") <-- contactFlow.signal.map(_ == ContactFlowState.Submitting),
+        div(
+          cls := "card-spinner",
+          role := "status",
+          aria.label := CardText.MessageWaitingLabel
+        )
+      ),
+      div(
+        cls := "card-result-overlay",
+        cls("is-open") <-- contactFlow.signal.map {
+          case ContactFlowState.Succeeded | ContactFlowState.Failed(_) => true
+          case _                                                       => false
+        },
+        div(
+          cls := "card-result-panel",
+          role := "dialog",
+          aria.label := CardText.MessageTitle,
+          div(
+            cls := "card-result-content",
+            cls("is-error") <-- contactFlow.signal.map {
+              case ContactFlowState.Failed(_) => true
+              case _                          => false
+            },
+            text <-- contactFlow.signal.map {
+              case ContactFlowState.Failed(details) => details
+              case _                                => CardText.MessageSuccessText
+            }
+          ),
+          button(
+            typ := "button",
+            cls := "card-message-button card-result-ok",
+            tabIndex <-- contactFlow.signal.map {
+              case ContactFlowState.Succeeded | ContactFlowState.Failed(_) => 0
+              case _                                                       => -1
+            },
+            onClick --> (_ => contactFlow.set(ContactFlowState.Closed)),
+            CardText.MessageOkLabel
           )
         )
       )
