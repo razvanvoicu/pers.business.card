@@ -1,6 +1,6 @@
 package sgrv.be
 
-import sgrv.be.auth.{AppConfig, DatabaseAdmin, GoogleOAuth, SessionStore, TokenGenerator}
+import sgrv.be.auth.{AppConfig, CardConfig, DatabaseAdmin, GoogleOAuth, SessionStore, TokenGenerator}
 import sgrv.be.contact.MessageStore
 import sgrv.be.core.{CapabilityRegistry, RouteDiscovery}
 import zio.*
@@ -78,8 +78,8 @@ object Main extends ZIOAppDefault:
     Method.GET / "icon-512.png" -> handler(asset("icon-512.png", image.png, staticCacheCtrl)),
     Method.GET / "mug.jpg" -> handler(asset("mug.jpg", image.jpeg, staticCacheCtrl)),
     Method.GET / "qr-code.png" -> handler(asset("qr-code.png", image.png, staticCacheCtrl)),
-    Method.GET / "resume.pdf" ->
-      handler(asset("Razvan Voicu Resume 2026.pdf", application.pdf, staticCacheCtrl)),
+    Method.GET / "resume" ->
+      handler(asset("resume.html", text.html, staticCacheCtrl)),
     Method.GET / "manifest.webmanifest" ->
       handler(asset("manifest.webmanifest", application.`manifest+json`, staticCacheCtrl)),
     Method.GET / "style.css" -> handler(asset("style.css", text.css, staticCacheCtrl)),
@@ -119,6 +119,9 @@ object Main extends ZIOAppDefault:
   private[be] def serverConfig(host: String, port: Int): Server.Config =
     Server.Config.default.binding(host, port).gracefulShutdownTimeout(serverShutdownTimeout)
 
+  private val cardConfigLayer: ZLayer[AppConfig, Nothing, CardConfig] =
+    ZLayer.fromFunction((config: AppConfig) => config.card)
+
   private type Layer = BackendEnvironment & DatabaseAdmin
   private val backendLayer: ZLayer[Any, Throwable, Layer] =
     ZLayer.make[Layer](
@@ -128,6 +131,7 @@ object Main extends ZIOAppDefault:
       TokenGenerator.live,
       DatabaseAdmin.live,
       MessageStore.live,
+      cardConfigLayer,
       Client.default
     )
 

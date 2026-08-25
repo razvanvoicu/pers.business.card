@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Razvan Voicu, PhD - Executive Profile & Resume</title>
+    <style>
+        :root {
+            --primary: #1e293b;
+            --primary-light: #334155;
+            --accent: #0f766e;
+            --accent-light: #f0fdfa;
+            --accent-border: #ccfbf1;
+            --text-main: #1f2937;
+            --text-muted: #4b5563;
+            --text-light: #6b7280;
+            --bg-page: #f8fafc;
+            --bg-card: #ffffff;
+            --border: #e2e8f0;
+            --border-light: #f1f5f9;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            line-height: 1.55;
+            font-size: 14.5px;
+            padding: 32px 16px;
+        }
+
+        .container {
+            max-width: 860px;
+            margin: 0 auto;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: #ffffff;
+            padding: 36px 40px;
+            border-bottom: 3px solid var(--accent);
+        }
+
+        header h1 {
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 6px;
+        }
+
+        header .subtitle {
+            font-size: 15px;
+            color: #94a3b8;
+            font-weight: 500;
+            margin-bottom: 16px;
+        }
+
+        header .summary-text {
+            font-size: 13.5px;
+            line-height: 1.6;
+            color: #cbd5e1;
+        }
+
+        .content {
+            padding: 36px 40px;
+        }
+
+        section {
+            margin-bottom: 32px;
+        }
+
+        section:last-child {
+            margin-bottom: 0;
+        }
+
+        h2 {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--accent);
+            border-bottom: 2px solid var(--border-light);
+            padding-bottom: 6px;
+            margin-bottom: 16px;
+            font-weight: 700;
+        }
+
+        /* Signature Achievements Grid */
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .achievement-card {
+            background: var(--bg-page);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px 14px;
+        }
+
+        .achievement-card strong {
+            display: block;
+            color: var(--primary);
+            font-size: 13.5px;
+            margin-bottom: 4px;
+        }
+
+        .achievement-card p {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            line-height: 1.45;
+        }
+
+        /* Experience Item */
+        .item {
+            margin-bottom: 22px;
+        }
+
+        .item:last-child {
+            margin-bottom: 0;
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            margin-bottom: 2px;
+        }
+
+        .item-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .item-date {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        .item-company {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 6px;
+        }
+
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        ul li {
+            position: relative;
+            padding-left: 18px;
+            margin-bottom: 5px;
+            font-size: 13.5px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        ul li::before {
+            content: "•";
+            position: absolute;
+            left: 4px;
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        /* Two column layout for footer sections */
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 24px;
+        }
+
+        .badge-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .badge {
+            background-color: var(--bg-page);
+            border: 1px solid var(--border);
+            color: var(--primary-light);
+            font-size: 12px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        @media print {
+            body {
+                background: none;
+                padding: 0;
+            }
+            .container {
+                border: none;
+                box-shadow: none;
+                max-width: 100%;
+            }
+            header {
+                background-color: #ffffff;
+                color: #000000;
+                padding: 20px 0;
+                border-bottom: 2px solid #000;
+            }
+            header .subtitle { color: #333; }
+            header .summary-text { color: #222; }
+            .content { padding: 20px 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Razvan Voicu, PhD</h1>
+        <div class="subtitle">Veteran Technologist &amp; Systems Architect — Scalable Distributed Systems, AI, Payments</div>
+        <div class="summary-text">
+            Hands-on systems architect and CTO with 30+ years across fintech, payments, AI-assisted engineering, and high-throughput data engineering. Specializes in re-architecture, performance engineering, cloud cost reduction (80–90%), and AI-augmented productivity.<br><br>
+            Across TASConnect, GoTo Financial, Meta, Teralytics, and major banks, has repeatedly delivered cost reduction through multi-tenancy and cloud migration, Kafka/Akka event-driven systems at scale, and AI-augmented engineering workflows grounded in first-principles engineering. Multi-paradigm polyglot engineer (Java, Python, Scala, TypeScript, SQL). Open to CTO, Principal, Distinguished, and Staff+ roles, as well as advisory engagements.
+        </div>
+    </header>
+
+    <div class="content">
+        <section>
+            <h2>Signature Achievements</h2>
+            <div class="achievements-grid">
+                <div class="achievement-card">
+                    <strong>FSM Product Architecture</strong>
+                    <p>Architected product line as configurable finite-state machines; replaced per-product hard-coding with a single reusable engine.</p>
+                </div>
+                <div class="achievement-card">
+                    <strong>Fintech Platform Scale</strong>
+                    <p>Scaled to ~400M monthly transactions, Rp 55T (~USD 3B) GTV, 1M+ merchants. Raised uptime to 99.95%; P99 latency ~500ms.</p>
+                </div>
+                <div class="achievement-card">
+                    <strong>Cloud Cost Optimization</strong>
+                    <p>Reduced cloud costs ~80% at GoTo over 3 years and ~90% at TASConnect via multi-tenancy and serverless architecture.</p>
+                </div>
+                <div class="achievement-card">
+                    <strong>Quality &amp; Efficiency</strong>
+                    <p>Raised test coverage 15% &rarr; 80%, cut defects 100+ &rarr; &lt;10 per release. Reduced engineering headcount 160 &rarr; 80 while raising output.</p>
+                </div>
+                <div class="achievement-card">
+                    <strong>Meta Critical-Path Scale</strong>
+                    <p>Led team operating pipelines at ~300TB/day, 23PB, 1,000+ nodes. Improved on-time delivery from &lt;15 days/month &rarr; 100% of days.</p>
+                </div>
+                <div class="achievement-card">
+                    <strong>AI &amp; Streaming Engineering</strong>
+                    <p>Built AI-assisted engineering practice across two orgs. Converted research-grade Bayesian models to streaming at ~3&times; real-time throughput.</p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Experience</h2>
+
+            <div class="item">
+                <div class="item-header">
+                    <span class="item-title">Chief Technology Officer</span>
+                    <span class="item-date">July 2025 – July 2026</span>
+                </div>
+                <div class="item-company">TASConnect · Singapore (registered as SCV Research &amp; Development Pte Ltd)</div>
+                <ul>
+                    <li>Re-architected B2B working-capital products (invoice/PO financing on anchor credit), writing core parts personally.</li>
+                    <li>Modeled products as finite-state machines, transition logic as data — one backend across all products.</li>
+                    <li>Multi-tenancy, user-based sharding, stateless serverless tier (PostgreSQL + Lambda): 90% cloud cost reduction, uptime &lt;90% &rarr; 99%, ~500ms P99.</li>
+                    <li>Delivered mobile single-handedly: frontend to PWA with Android/iOS enclosures.</li>
+                    <li>Authored 11-initiative technology program and AI adoption strategy; reviewed positively by Board and independent reviewers.</li>
+                    <li>Designed hybrid LLM/Mixture-of-Experts and neuro-symbolic AI strategy; hands-on throughout implementation and live coding.</li>
+                    <li>Streamlined engineering organization: reduced team size from 40 &rarr; 20.</li>
+                </ul>
+            </div>
+
+            <div class="item">
+                <div class="item-header">
+                    <span class="item-title">Director, Head of Engineering, Merchant Services</span>
+                    <span class="item-date">2019 – 2025</span>
+                </div>
+                <div class="item-company">GoTo Financial (Gojek) · Singapore</div>
+                <ul>
+                    <li>Owned payments architecture: ~$3B monthly GTV, 1M+ merchants, ~400M monthly transactions; reached 1M merchants 2 months ahead of target.</li>
+                    <li>Fixed cross-team API missing transactions with dynamic Postgres advisory locks and Kafka subscriptions; adopted org-wide.</li>
+                    <li>Introduced Flutter by building initial Android/iOS implementations; foundation of GoPay Merchant (grown 53%, market leader).</li>
+                    <li>Introduced "Add, don't change" backward compatibility pattern and drove infrastructure-as-software model across AWS &rarr; GCP migration.</li>
+                    <li>Revamped QA with Cucumber/Gherkin: coverage 15% &rarr; 80%, defects 100+ &rarr; &lt;10 per release candidate.</li>
+                    <li>Led multi-year cloud migrations and infrastructure optimization: ~80% cost reduction over 3 years.</li>
+                    <li>Raised uptime 99% &rarr; 99.95% via automated detection and restart of failing microservices (P95 &lt;200ms, P99 &lt;500ms).</li>
+                </ul>
+            </div>
+
+            <div class="item">
+                <div class="item-header">
+                    <span class="item-title">Adjunct Professor (part-time)</span>
+                    <span class="item-date">2017 – 2023</span>
+                </div>
+                <div class="item-company">School of Computing, National University of Singapore</div>
+                <ul>
+                    <li>Designed and taught Functional Reactive Programming (Scala, Kafka); enrolment grew 20 &rarr; 120+ within 3 years.</li>
+                    <li>Taught programming language design, advanced algorithms, data science (R), Python, and software project management.</li>
+                </ul>
+            </div>
+
+            <div class="item">
+                <div class="item-header">
+                    <span class="item-title">Data Engineering Manager</span>
+                    <span class="item-date">2016 – 2019</span>
+                </div>
+                <div class="item-company">Meta · Singapore</div>
+                <ul>
+                    <li>Led 11 engineers across two subteams on ads and monetization analytics focused on the China ads market.</li>
+                    <li>Operated critical-path pipelines: ~300TB/day, 23PB window, ~11,000 pipelines, 1,000+ nodes, 32-hour critical path.</li>
+                    <li>Contributed directly in Hive SQL, Presto SQL, and Scala/Spark; debugged scheduler and extended internal tooling.</li>
+                    <li>Migrated Hive workloads to Presto/Spark, reducing processing from hours to minutes; on-time delivery reached 100% of days.</li>
+                    <li>Scoped at ~25–30% hands-on; dedicated 40–50% to coding and deep technical debugging.</li>
+                </ul>
+            </div>
+
+            <div class="item">
+                <div class="item-header">
+                    <span class="item-title">Data Engineering Lead</span>
+                    <span class="item-date">2015 – 2016</span>
+                </div>
+                <div class="item-company">Teralytics · Singapore</div>
+                <ul>
+                    <li>Led 4 engineers turning PhD-built Bayesian HMM models into production streaming inference for Singapore's LTA (near real-time, 10 min delay).</li>
+                    <li>Converted multi-pass batch algorithms into online, event-driven functional transformations (Scala, Kafka, Akka, Mesos).</li>
+                    <li>Optimized for streaming: ~3&times; real-time throughput — processed a full day of input in under 8 hours.</li>
+                </ul>
+            </div>
+
+            <div class="item">
+                <div class="item-header">
+                    <span class="item-title">Earlier Career — Financial Systems (VP Level)</span>
+                    <span class="item-date">Pre-2015</span>
+                </div>
+                <div class="item-company">Bank of America · J.P. Morgan · Standard Chartered Bank</div>
+                <ul>
+                    <li><strong>Standard Chartered (VP, 2008–2011):</strong> 30+ Haskell trading apps (FX derivatives, baskets, indices, structured products); Monte Carlo on 18-node cluster.</li>
+                    <li><strong>J.P. Morgan (VP, 2011–2013):</strong> Led 5 of a 40-person org on custody asset-servicing (Microservices/AMQP, Java, C#, WPF).</li>
+                    <li><strong>Bank of America Merrill Lynch (VP, 2013–2015):</strong> Led 7 on trade allocation engine; modeled matching as NP-complete Subset Sum with pricing-tolerance heuristics (zero production incidents).</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h2>Education</h2>
+
+            <div class="item">
+                <div class="item-header">
+                    <span class="item-title">PhD, Computer Science</span>
+                    <span class="item-date">1998 – 2004</span>
+                </div>
+                <div class="item-company">School of Computing, National University of Singapore</div>
+                <ul>
+                    <li>Valedictorian, Class of 2004 · Best Thesis Award · IDA Gold Medal &amp; Cash Award · Dean's Graduate Award (2000) · GPA (NUS CAP) 5.0 / 5.0.</li>
+                    <li>Bell Labs (New Jersey): Multiple internships; implemented register allocator for ARM compiler backend in Standard ML (SML/NJ).</li>
+                    <li>Lectured across undergraduate CS curriculum: programming, algorithms, operating systems, compilers, distributed systems, formal methods.</li>
+                    <li>Author of 14 peer-reviewed publications in program verification and automated reasoning.</li>
+                </ul>
+            </div>
+
+            <div class="item">
+                <div class="item-header">
+                    <span class="item-title">Bachelor of Computer Engineering</span>
+                    <span class="item-date">1987 – 1991</span>
+                </div>
+                <div class="item-company">Gheorghe Asachi Technical University · Romania</div>
+                <ul>
+                    <li>Valedictorian, Class of 1991 · Average overall mark: 9.96 / 10.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="meta-grid">
+            <div>
+                <h2>Core Competencies</h2>
+                <ul style="margin-bottom: 12px;">
+                    <li><strong>Payments &amp; Merchant:</strong> $3B+ GTV, 400M+ tx/mo, regulatory-aware design</li>
+                    <li><strong>Architecture:</strong> Reactive, event-driven, multi-tenant, FSM-based, AWS/GCP/AliCloud, K8s, Serverless</li>
+                    <li><strong>AI &amp; Distributed Systems:</strong> AI-assisted engineering, Symbolic AI, Kafka, Akka, High-throughput data platforms</li>
+                    <li><strong>Leadership:</strong> Teams to 160, org redesign, quality engineering, cost optimization</li>
+                </ul>
+                <div class="badge-list">
+                    <span class="badge">Java</span>
+                    <span class="badge">Kotlin</span>
+                    <span class="badge">Scala / Spark</span>
+                    <span class="badge">Golang</span>
+                    <span class="badge">Python</span>
+                    <span class="badge">TypeScript</span>
+                    <span class="badge">Swift</span>
+                    <span class="badge">Flutter / Dart</span>
+                    <span class="badge">C / C++</span>
+                    <span class="badge">SQL</span>
+                    <span class="badge">Linux</span>
+                </div>
+            </div>
+
+            <div>
+                <h2>Languages &amp; Interests</h2>
+                <ul>
+                    <li><strong>English:</strong> Full professional</li>
+                    <li><strong>French:</strong> Professional working</li>
+                    <li><strong>Romanian:</strong> Native</li>
+                    <li><strong>German:</strong> Limited working</li>
+                    <li><strong>Italian:</strong> Elementary</li>
+                    <li><strong>Indonesian:</strong> Conversational</li>
+                </ul>
+                <h2 style="margin-top: 16px;">Hobbies</h2>
+                <ul>
+                    <li>Motorbike touring</li>
+                    <li>Hobby electronics &amp; IoT gadgets built from scratch</li>
+                </ul>
+            </div>
+        </section>
+    </div>
+</div>
+
+</body>
+</html>

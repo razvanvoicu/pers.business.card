@@ -63,7 +63,14 @@ class MainSuite extends munit.FunSuite:
       "GCLOUD_SERVICE_ACCOUNT=",
       "GOOGLE_OAUTH_CLIENT_ID=",
       "GOOGLE_OAUTH_CLIENT_SECRET=",
-      "ADMIN_PASSWORD="
+      "ADMIN_PASSWORD=",
+      "CARD_NAME=",
+      "CARD_DESIGNATION=",
+      "CARD_TAGLINE=",
+      "CARD_LINK1=",
+      "CARD_LINK2=",
+      "CARD_LINK3=",
+      "CARD_LINK4="
     )
 
     externallyConfiguredKeys.foreach(prefix =>

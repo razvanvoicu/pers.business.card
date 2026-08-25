@@ -4,7 +4,7 @@ import com.raquo.laminar.api.L.*
 import com.raquo.laminar.codecs.StringAsIsCodec
 import com.raquo.laminar.nodes.ReactiveHtmlElement
 import org.scalajs.dom
-import sgrv.api.SubmitMessageRequest
+import sgrv.api.{PersonalParticulars, SubmitMessageRequest}
 import zio.json.*
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -42,6 +42,13 @@ private[fe] object BusinessCard:
     val qrExpanded: Var[Boolean] = Var(false)
     val contactFlow: Var[ContactFlowState] = Var(ContactFlowState.Closed)
     val messageText: Var[String] = Var(loadMessageDraft())
+    val particulars: Var[PersonalParticulars] = Var(EmptyParticulars)
+
+    fetchPersonalParticulars().onComplete {
+      case Success(value) => particulars.set(value)
+      case Failure(error) =>
+        dom.console.warn(s"Could not load personal particulars: ${Option(error.getMessage).getOrElse(error.getClass.getSimpleName)}")
+    }
 
     val layoutSignal: Signal[GridMath.LayoutResult] =
       frameSize.signal.map((width, height) => GridMath.compute(width, height))
@@ -51,7 +58,7 @@ private[fe] object BusinessCard:
         case GridMath.LayoutResult.Fits(metrics)   => metrics
         case GridMath.LayoutResult.TooExtreme(_, _) => PlaceholderMetrics
 
-    val cardGrid = grid(metricsSignal, qrExpanded, contactFlow, messageText)
+    val cardGrid = grid(metricsSignal, qrExpanded, contactFlow, messageText, particulars.signal)
     val tooExtremeMessage = div(cls := "card-message", p(CardText.TooExtremeMessage))
 
     div(
@@ -112,7 +119,21 @@ private[fe] object BusinessCard:
     contentScale = 1.0
   )
 
-  private val downloadAttr = htmlAttr("download", StringAsIsCodec)
+  /** Shown only for the brief window before `fetchPersonalParticulars` resolves. */
+  private val EmptyParticulars = PersonalParticulars("", "", "", "", "", "", "")
+
+  /** The card's personal content (name, designation, tagline, link URLs) lives in `CardConfig` on the backend,
+    * not in the frontend bundle, so it's fetched once at startup instead of compiled in. A failure (network or
+    * malformed JSON) leaves the card blank rather than crashing the page, logged for diagnosis.
+    */
+  private def fetchPersonalParticulars(): Future[PersonalParticulars] =
+    dom.fetch("/personalparticulars").flatMap { response =>
+      if response.ok then
+        val body: Future[String] = response.text()
+        body.map(_.fromJson[PersonalParticulars].getOrElse(EmptyParticulars))
+      else Future.successful(EmptyParticulars)
+    }
+
   private val targetAttr = htmlAttr("target", StringAsIsCodec)
 
   private def px(value: Double): String = f"$value%.3fpx"
@@ -173,6 +194,34 @@ private[fe] object BusinessCard:
       }(using ctx.owner): Unit
       whenFontsReady(() => applyFittedFontSize(element, lastMetrics.rowHeights(rowIndex) * fraction))
 
+  /** Like `fitFontSize`, but for an element whose text content itself arrives asynchronously (the fetched
+    * personal particulars) rather than being fixed at render time. The text is set here, imperatively, rather
+    * than through a separate `text <-- textSignal` binder, specifically so the fit-measurement below always runs
+    * immediately after the text it's measuring was actually written to the DOM — two independent subscribers to
+    * the same signal would race on that ordering instead.
+    */
+  private def fitFontSizeWithText[El <: ReactiveHtmlElement[? <: dom.HTMLElement]](
+      metricsSignal: Signal[GridMath.GridMetrics],
+      textSignal: Signal[String],
+      rowIndex: Int,
+      fraction: Double
+  ): Modifier[El] =
+    onMountCallback[El]: ctx =>
+      val element: dom.HTMLElement = ctx.thisNode.ref
+      var lastMetrics: GridMath.GridMetrics = PlaceholderMetrics
+
+      def applyNow(): Unit = applyFittedFontSize(element, lastMetrics.rowHeights(rowIndex) * fraction)
+
+      textSignal.foreach { value =>
+        element.textContent = value
+        applyNow()
+      }(using ctx.owner): Unit
+      metricsSignal.foreach { metrics =>
+        lastMetrics = metrics
+        applyNow()
+      }(using ctx.owner): Unit
+      whenFontsReady(() => applyNow())
+
   /** Adds `className` on click and removes it again after `durationMillis`, so a CSS animation keyed off that
     * class plays once per click. Toggled directly via `classList` (rather than through reactive state) so a
     * rapid re-click restarts the animation: forcing a reflow between removing and re-adding the class is what
@@ -229,10 +278,10 @@ private[fe] object BusinessCard:
       case other =>
         Option(other.getMessage).map(_.trim).filter(_.nonEmpty).getOrElse(other.getClass.getSimpleName)
 
-  private def externalLink(cssClass: String, label: String, url: String): Anchor =
+  private def externalLink(cssClass: String, label: String, urlSignal: Signal[String]): Anchor =
     a(
       cls := s"card-link $cssClass",
-      href := url,
+      href <-- urlSignal,
       targetAttr := "_blank",
       rel := "noopener noreferrer",
       label
@@ -242,7 +291,8 @@ private[fe] object BusinessCard:
       metricsSignal: Signal[GridMath.GridMetrics],
       qrExpanded: Var[Boolean],
       contactFlow: Var[ContactFlowState],
-      messageText: Var[String]
+      messageText: Var[String],
+      particulars: Signal[PersonalParticulars]
   ): Div =
     div(
       cls := "card-grid",
@@ -250,37 +300,38 @@ private[fe] object BusinessCard:
       img(
         cls := "card-photo",
         src := "/mug.jpg",
-        alt := CardText.Name
+        alt <-- particulars.map(_.name)
       ),
       div(
         cls := "card-name",
-        fitFontSize(metricsSignal, rowIndex = 4, GridSpec.NameFontFraction),
-        CardText.Name
+        fitFontSizeWithText(metricsSignal, particulars.map(_.name), rowIndex = 4, GridSpec.NameFontFraction)
       ),
       div(
         cls := "card-designation",
-        fitFontSize(metricsSignal, rowIndex = 6, GridSpec.DesignationFontFraction),
-        CardText.Designation
+        fitFontSizeWithText(
+          metricsSignal,
+          particulars.map(_.designation),
+          rowIndex = 6,
+          GridSpec.DesignationFontFraction
+        )
       ),
       div(
         cls := "card-tagline",
-        fitFontSize(metricsSignal, rowIndex = 8, GridSpec.TaglineFontFraction),
-        CardText.Tagline
+        fitFontSizeWithText(metricsSignal, particulars.map(_.tagline), rowIndex = 8, GridSpec.TaglineFontFraction)
       ),
       a(
         cls := "card-link card-link-resume",
-        href := CardText.ResumeHref,
-        downloadAttr := CardText.ResumeDownloadName,
+        href <-- particulars.map(_.link1),
         fitFontSize(metricsSignal, rowIndex = 10, GridSpec.LinkFontFraction),
         CardText.ResumeLinkLabel
       ),
-      externalLink("card-link-linkedin", CardText.LinkedInLabel, CardText.LinkedInUrl).amend(
+      externalLink("card-link-linkedin", CardText.LinkedInLabel, particulars.map(_.link2)).amend(
         fitFontSize(metricsSignal, rowIndex = 10, GridSpec.LinkFontFraction)
       ),
-      externalLink("card-link-13-left", CardText.Link13LeftLabel, CardText.Link13LeftUrl).amend(
+      externalLink("card-link-13-left", CardText.Link13LeftLabel, particulars.map(_.link3)).amend(
         fitFontSize(metricsSignal, rowIndex = 12, GridSpec.LinkFontFraction)
       ),
-      externalLink("card-link-13-right", CardText.Link13RightLabel, CardText.Link13RightUrl).amend(
+      externalLink("card-link-13-right", CardText.Link13RightLabel, particulars.map(_.link4)).amend(
         fitFontSize(metricsSignal, rowIndex = 12, GridSpec.LinkFontFraction)
       ),
       button(

@@ -60,7 +60,14 @@ class AuthSuite extends munit.FunSuite:
         "PUBLIC_BASE_URL" -> " https://app.example.com/ ",
         "GCP_PROJECT_ID" -> " project-id ",
         "FIRESTORE_DATABASE_ID" -> " database-id ",
-        "FIRESTORE_LOCATION" -> " location "
+        "FIRESTORE_LOCATION" -> " location ",
+        "CARD_NAME" -> " Jane Doe ",
+        "CARD_DESIGNATION" -> " Consultant ",
+        "CARD_TAGLINE" -> " Building things ",
+        "CARD_LINK1" -> " /resume ",
+        "CARD_LINK2" -> " https://linkedin.example.com/in/jane ",
+        "CARD_LINK3" -> " https://blog.example.com ",
+        "CARD_LINK4" -> " https://portfolio.example.com "
       )
     )
 
@@ -69,7 +76,16 @@ class AuthSuite extends munit.FunSuite:
       Right(
         AppConfig(
           OAuthConfig("client-id", "client-secret", "https://app.example.com"),
-          FirestoreConfig("project-id", "database-id", "location")
+          FirestoreConfig("project-id", "database-id", "location"),
+          CardConfig(
+            "Jane Doe",
+            "Consultant",
+            "Building things",
+            "/resume",
+            "https://linkedin.example.com/in/jane",
+            "https://blog.example.com",
+            "https://portfolio.example.com"
+          )
         )
       )
     )

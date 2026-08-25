@@ -21,7 +21,14 @@ val supportedAppConfigKeys = Set(
   "FIRESTORE_LOCATION",
   "GCLOUD_REGION",
   "ARTIFACT_REGISTRY_REPOSITORY",
-  "GCLOUD_SERVICE_ACCOUNT"
+  "GCLOUD_SERVICE_ACCOUNT",
+  "CARD_NAME",
+  "CARD_DESIGNATION",
+  "CARD_TAGLINE",
+  "CARD_LINK1",
+  "CARD_LINK2",
+  "CARD_LINK3",
+  "CARD_LINK4"
 )
 // OAuth is compulsory for every clone: validate it while loading the build as well as rereading it in tasks.
 val initialAppConfig = AppConfigBuild.load(appConfigFile, supportedAppConfigKeys)
@@ -326,6 +333,7 @@ lazy val backend = (project in file("backend"))
       val config = appBuildConfig.value
       parseEnvFile((Compile / resourceDirectory).value / "test.env") ++
         AppConfigBuild.gcpRuntimeEnv(config) ++
+        AppConfigBuild.cardRuntimeEnv(config) ++
         OAuthBuild.configEnv(localOAuthConfigFile.value) ++
         PublicBaseUrlBuild.localConfigEnv("LOCAL_BASE_URL", config.required("LOCAL_BASE_URL")) ++
         localAdminPasswordFile.value.fold(Map.empty[String, String])(AdminBuild.configEnv)
@@ -636,7 +644,8 @@ lazy val root = {
         val deploymentEnv = PublicBaseUrlBuild.configEnv(
           "ARTIFACT_BASE_URL",
           config.required("ARTIFACT_BASE_URL")
-        ) ++ Map("PORT" -> config.requiredPort("ARTIFACT_PORT")) ++ AppConfigBuild.gcpRuntimeEnv(config)
+        ) ++ Map("PORT" -> config.requiredPort("ARTIFACT_PORT")) ++ AppConfigBuild.gcpRuntimeEnv(config) ++
+          AppConfigBuild.cardRuntimeEnv(config)
         clean.value
         Def.task {
           val log = streams.value.log
@@ -694,7 +703,7 @@ lazy val root = {
         val deploymentEnv = PublicBaseUrlBuild.configEnv(
           "PUBLIC_BASE_URL",
           config.required("PUBLIC_BASE_URL")
-        ) ++ AppConfigBuild.gcpRuntimeEnv(config)
+        ) ++ AppConfigBuild.gcpRuntimeEnv(config) ++ AppConfigBuild.cardRuntimeEnv(config)
         val gcloudProject = config.required("GCP_PROJECT_ID")
         val gcloudRegion = config.required("GCLOUD_REGION")
         val artifactRepository = config.required("ARTIFACT_REGISTRY_REPOSITORY")

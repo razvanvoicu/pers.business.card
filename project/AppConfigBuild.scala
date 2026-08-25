@@ -68,4 +68,9 @@ object AppConfigBuild {
     Seq("GCP_PROJECT_ID", "FIRESTORE_DATABASE_ID", "FIRESTORE_LOCATION")
       .map(name => name -> config.required(name))
       .toMap
+
+  def cardRuntimeEnv(config: Config): Map[String, String] =
+    Seq("CARD_NAME", "CARD_DESIGNATION", "CARD_TAGLINE", "CARD_LINK1", "CARD_LINK2", "CARD_LINK3", "CARD_LINK4")
+      .map(name => name -> config.required(name))
+      .toMap
 }
