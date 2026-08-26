@@ -1,12 +1,24 @@
 package sgrv.be
 
-import sgrv.be.auth.{AppConfig, CardConfig, DatabaseAdmin, GoogleOAuth, SessionStore, TokenGenerator}
+import sgrv.be.auth.{AppConfig, CardConfig, DatabaseAdmin}
 import sgrv.be.contact.MessageStore
 import sgrv.be.core.{CapabilityRegistry, RouteDiscovery}
 import zio.*
 import zio.http.*
 import zio.logging.*
 
+// TODO(post-v1.0 cleanup, deferred — see the v1.0 dead-code removal pass): smaller organizational polish that
+// wasn't essential to get right for the release, in no particular order:
+//  - `sgrv.be.auth` now holds only `AppConfig`/`DatabaseAdmin`/`GoogleFuture` — nothing "auth" is left in it since
+//    the login/session/Sheets/About machinery was removed. Consider renaming or relocating the package (e.g. into
+//    `sgrv.be.core`) to match what it actually contains.
+//  - `sgrv.be.card` (`PersonalParticulars`) and `sgrv.be.contact` (`MessageStore`, `SubmitMessage`) are two small
+//    packages for what's conceptually one "business card backend" area; consider merging them.
+//  - `PUBLIC_BASE_URL` is still threaded through `config.env`/`supportedAppConfigKeys`/`deployGCloud`, but nothing
+//    in the app reads it anymore now that OAuth (its only consumer) is gone — it just ships to Cloud Run unused.
+//    Dropping it means also removing the `PUBLIC_BASE_URL=` line from the local `config.env` file.
+//  - `frontend/src/main/scala/sgrv/fe/card/GridSpec.scala` has an orphaned doc comment ("Row 2 in the happy path
+//    equals column 2's width...") with no declaration under it — a stray fragment, not attached to anything.
 private[be] object Config:
   val serverShutdownTimeout = 8.seconds
   val processShutdownTimeout = 9.seconds
@@ -126,13 +138,9 @@ object Main extends ZIOAppDefault:
   private val backendLayer: ZLayer[Any, Throwable, Layer] =
     ZLayer.make[Layer](
       AppConfig.live,
-      GoogleOAuth.live,
-      SessionStore.live,
-      TokenGenerator.live,
       DatabaseAdmin.live,
       MessageStore.live,
-      cardConfigLayer,
-      Client.default
+      cardConfigLayer
     )
 
   // noinspection HttpUrlsUsage
@@ -148,8 +156,6 @@ object Main extends ZIOAppDefault:
       applicationRoutes <- RouteDiscovery.routes(registry, reservedPatterns).map(static ++ _)
       _ <- DatabaseAdmin.ensureDatabase.catchAll: error =>
         ZIO.logWarning(s"Could not ensure the Firestore database: ${error.getMessage}")
-      _ <- DatabaseAdmin.ensureSessionTtl.catchAll: error =>
-        ZIO.logWarning(s"Could not ensure the Firestore session TTL policy: ${error.getMessage}")
       _ <- ZIO.logInfo(s"Serving on http://$host:$p/")
       _ <- Server
         .serve(applicationRoutes @@ HandlerAspect.requestLogging())

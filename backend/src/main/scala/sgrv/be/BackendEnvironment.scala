@@ -1,17 +1,12 @@
 package sgrv.be
 
-import sgrv.be.auth.{CardConfig, GoogleOAuth, SessionStore, TokenGenerator}
+import sgrv.be.auth.CardConfig
 import sgrv.be.contact.MessageStore
 import sgrv.be.core.Capability
-import zio.http.Client
 
 /** Services available to dynamically discovered backend routes. */
-type BackendEnvironment = GoogleOAuth & SessionStore & TokenGenerator & Client & MessageStore & CardConfig
+type BackendEnvironment = MessageStore & CardConfig
 
 private[be] object BackendCapabilities:
-  val googleOAuth: Capability[GoogleOAuth] = Capability("google-oauth")
-  val sessionStore: Capability[SessionStore] = Capability("session-store")
-  val tokenGenerator: Capability[TokenGenerator] = Capability("token-generator")
-  val httpClient: Capability[Client] = Capability("http-client")
   val messageStore: Capability[MessageStore] = Capability("message-store")
   val cardConfig: Capability[CardConfig] = Capability("card-config")

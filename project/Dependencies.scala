@@ -9,12 +9,10 @@ object Dependencies {
   lazy val munit = "org.scalameta" %% "munit" % munitVersion
   val zioJsonVersion = "0.9.1"
 
-  // Google Cloud: Firestore access-log persistence and OAuth 2.0 code exchange / ID-token verification
+  // Google Cloud Firestore: the Messages collection and the personal-card database bootstrap
   lazy val firestore = "com.google.cloud" % "google-cloud-firestore" % "3.43.0"
   lazy val firestoreAdmin = "com.google.cloud" % "google-cloud-firestore-admin" % "3.43.0"
-  lazy val googleApiClient = "com.google.api-client" % "google-api-client" % "2.8.0"
-  // JSON for the Sheets/Drive REST calls; already on the classpath transitively via google-api-client's
-  // GsonFactory, declared explicitly so the dependency doesn't rely on that transitive detail.
+  // JSON parsing used only in backend tests (asserting on the served web-app manifest).
   lazy val gson = "com.google.code.gson" % "gson" % "2.10.1"
 
   // Browser automation for the e2etest project; Selenium Manager (bundled since 4.6) auto-resolves a matching

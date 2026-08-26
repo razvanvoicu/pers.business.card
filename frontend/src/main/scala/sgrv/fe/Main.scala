@@ -33,3 +33,6 @@ object Main:
 
   private def errorMessage(error: Throwable): String =
     Option(error.getMessage).map(_.trim).filter(_.nonEmpty).getOrElse(error.getClass.getSimpleName)
+
+  // Whenever the font or particulars are slow to load, a fake resize event will save the day.
+  dom.window.onload = _ => dom.window.setTimeout(() => BusinessCard.render(), 1000.0)

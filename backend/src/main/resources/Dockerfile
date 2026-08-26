@@ -1,8 +1,8 @@
 # Built by `sbt artifact` or `sbt deployGCloud` from a staging directory containing app.jar, lib/*.jar, prod.env,
 # runApp, and an adc/ directory.
 #
-# SECURITY: the standalone artifact may contain OAuth/admin secrets and local ADC. The Cloud Run task supplies
-# an empty adc/ directory and keeps runtime secrets outside its Docker context, producing a secret-free image.
+# SECURITY: the standalone artifact may contain local ADC. The Cloud Run task supplies an empty adc/ directory and
+# keeps deployment configuration outside its Docker context, producing a secret-free image.
 FROM eclipse-temurin:21-jre-jammy
 
 WORKDIR /app

@@ -38,16 +38,42 @@ private[fe] object BusinessCard:
     case Failed(details: String)
 
   def render(): Div =
+    println("Rendering business card")
     val frameSize: Var[(Double, Double)] = Var((0.0, 0.0))
     val qrExpanded: Var[Boolean] = Var(false)
     val contactFlow: Var[ContactFlowState] = Var(ContactFlowState.Closed)
     val messageText: Var[String] = Var(loadMessageDraft())
     val particulars: Var[PersonalParticulars] = Var(EmptyParticulars)
 
-    fetchPersonalParticulars().onComplete {
-      case Success(value) => particulars.set(value)
-      case Failure(error) =>
-        dom.console.warn(s"Could not load personal particulars: ${Option(error.getMessage).getOrElse(error.getClass.getSimpleName)}")
+    // The very first font-size measurement for the fetched particulars (name/designation/tagline) can be wrong
+    // in two independent, unrelated ways: against a temporary fallback font if the web fonts haven't finished
+    // loading yet (see `whenFontsReady`), and/or against the empty placeholder if this fetch hasn't resolved yet.
+    // Rather than coupling this file's font-loading/fetch code to `fitFontSizeWithText`'s internals, both
+    // readiness signals converge here on dispatching a synthetic "resize" event once *both* have settled —
+    // the same event `.viewport-frame`'s own visualViewport listener below already reacts to by remeasuring and
+    // refitting every piece of text on the card, exactly as a real resize does.
+    var fontsReady = false
+    var particularsReady = false
+    def triggerResizeOnceBothReady(): Unit =
+      if fontsReady && particularsReady then
+        fontsReady = false
+        particularsReady = false
+        triggerViewportResize()
+
+    whenFontsReady { () =>
+      fontsReady = true
+      triggerResizeOnceBothReady()
+    }
+
+    fetchPersonalParticulars().onComplete { result =>
+      result match
+        case Success(value) => particulars.set(value)
+        case Failure(error) =>
+          dom.console.warn(
+            s"Could not load personal particulars: ${Option(error.getMessage).getOrElse(error.getClass.getSimpleName)}"
+          )
+      particularsReady = true
+      triggerResizeOnceBothReady()
     }
 
     val layoutSignal: Signal[GridMath.LayoutResult] =
@@ -173,6 +199,16 @@ private[fe] object BusinessCard:
     val fonts = dom.document.asInstanceOf[js.Dynamic].fonts
     if !js.isUndefined(fonts) then fonts.ready.asInstanceOf[js.Promise[js.Any]].toFuture.foreach(_ => callback())
 
+  /** Dispatches a synthetic "resize" event on `visualViewport` — the same event `.viewport-frame`'s own listener
+    * (see `render`) already reacts to by remeasuring and refitting every piece of text on the card via
+    * `metricsSignal`. A no-op if `visualViewport` is unavailable, matching that listener's own fallback.
+    */
+  private def triggerViewportResize(): Unit =
+    val visualViewport = dom.window.asInstanceOf[js.Dynamic].visualViewport
+    if !js.isUndefined(visualViewport) then
+      val _ = visualViewport.dispatchEvent(new dom.Event("resize"))
+      ()
+
   /** A modifier version of `applyFittedFontSize`, re-applied every time the row's computed height changes, and
     * once more when the page's web fonts finish loading (see `whenFontsReady`) in case the very first
     * measurement above was fitted against a temporary fallback font instead.
@@ -199,6 +235,10 @@ private[fe] object BusinessCard:
     * than through a separate `text <-- textSignal` binder, specifically so the fit-measurement below always runs
     * immediately after the text it's measuring was actually written to the DOM — two independent subscribers to
     * the same signal would race on that ordering instead.
+    *
+    * Unlike `fitFontSize`, this doesn't hook `whenFontsReady` itself: `render`'s own fonts-ready/particulars-ready
+    * join already forces a `metricsSignal` update (via a synthetic resize) once both are settled, which this
+    * element's `metricsSignal.foreach` subscription below picks up like any other metrics change.
     */
   private def fitFontSizeWithText[El <: ReactiveHtmlElement[? <: dom.HTMLElement]](
       metricsSignal: Signal[GridMath.GridMetrics],
@@ -220,7 +260,6 @@ private[fe] object BusinessCard:
         lastMetrics = metrics
         applyNow()
       }(using ctx.owner): Unit
-      whenFontsReady(() => applyNow())
 
   /** Adds `className` on click and removes it again after `durationMillis`, so a CSS animation keyed off that
     * class plays once per click. Toggled directly via `classList` (rather than through reactive state) so a
