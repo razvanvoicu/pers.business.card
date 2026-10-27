@@ -31,7 +31,7 @@ private[fe] object GridSpec:
   /** Content-row heights as a share of frame height, in the happy path (row 17 excluded: it tracks column 4). */
   val Row5NameShare: Double = 0.1
   val Row7DesignationShare: Double = 0.07
-  val Row9TaglineShare: Double = 0.05
+  val Row9TaglineShare: Double = 0.07
   val Row11LinksShare: Double = 0.02
 
   /** Not given an explicit share in the spec; defaulted here to match row 11 (also a two-link row) — a plain
